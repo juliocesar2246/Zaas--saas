@@ -1,0 +1,82 @@
+// ZAIS SaaS - Versão Inicial com plano gratuito e pago
+
+import { useState, useEffect } from "react"; import { Card, CardContent } from "@/components/ui/card"; import { Button } from "@/components/ui/button"; import { Input } from "@/components/ui/input"; import { Textarea } from "@/components/ui/textarea"; import { Select, SelectTrigger, SelectItem, SelectContent } from "@/components/ui/select";
+
+const MAX_FREE_PROMPTS = 10;
+
+export default function ZaisApp() { const [texto, setTexto] = useState(""); const [tipo, setTipo] = useState("correcao"); const [resultado, setResultado] = useState(""); const [usos, setUsos] = useState(0); const [assinante, setAssinante] = useState(false); // Simula se o usuário é PRO
+
+useEffect(() => { const savedUsos = localStorage.getItem("usos") || 0; setUsos(parseInt(savedUsos)); }, []);
+
+function gerarPrompt() { if (!assinante && usos >= MAX_FREE_PROMPTS) { setResultado("Limite diário de prompts atingido. Assine o ZAIS PRO por R$10/mês."); return; }
+
+let prompt = "";
+switch (tipo) {
+  case "formal":
+    prompt = `Reescreva o texto abaixo de forma mais formal:\n\"${texto}\"`;
+    break;
+  case "simples":
+    prompt = `Explique o texto abaixo de forma simples:\n\"${texto}\"`;
+    break;
+  case "correcao":
+  default:
+    prompt = `Revise e corrija erros no texto:\n\"${texto}\"`;
+}
+setResultado(prompt);
+if (!assinante) {
+  const novosUsos = usos + 1;
+  setUsos(novosUsos);
+  localStorage.setItem("usos", novosUsos.toString());
+}
+
+}
+
+return ( <div className="max-w-xl mx-auto p-4"> <h1 className="text-3xl font-bold mb-4">ZAIS - Gerador de Prompts para Edição de Texto</h1>
+
+<Card className="mb-4">
+    <CardContent className="p-4">
+      <Textarea
+        placeholder="Cole aqui o texto que deseja trabalhar..."
+        value={texto}
+        onChange={(e) => setTexto(e.target.value)}
+      />
+
+      <div className="my-4">
+        <Select onValueChange={setTipo} defaultValue={tipo}>
+          <SelectTrigger className="w-full">
+            Selecione o tipo de prompt
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="correcao">Correção gramatical</SelectItem>
+            <SelectItem value="formal">Reescrever de forma formal</SelectItem>
+            <SelectItem value="simples">Traduzir para linguagem simples</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Button onClick={gerarPrompt} className="w-full">Gerar Prompt</Button>
+      <p className="mt-2 text-sm text-muted-foreground">
+        {assinante ? "Usuário PRO (uso ilimitado)" : `Prompts usados hoje: ${usos}/${MAX_FREE_PROMPTS}`}
+      </p>
+    </CardContent>
+  </Card>
+
+  {resultado && (
+    <Card>
+      <CardContent className="p-4">
+        <h2 className="text-lg font-semibold mb-2">Prompt Gerado:</h2>
+        <pre className="whitespace-pre-wrap text-sm bg-muted p-2 rounded">{resultado}</pre>
+      </CardContent>
+    </Card>
+  )}
+
+  {!assinante && usos >= MAX_FREE_PROMPTS && (
+    <div className="mt-6 text-center">
+      <p className="text-red-500 font-medium">Você atingiu seu limite diário gratuito.</p>
+      <Button className="mt-2" onClick={() => setAssinante(true)}>Assinar ZAIS PRO (R$10/mês)</Button>
+    </div>
+  )}
+</div>
+
+); }
+
